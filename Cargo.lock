@@ -1489,6 +1489,7 @@ dependencies = [
  "getrandom",
  "image",
  "instant",
+ "js-sys",
  "leptos",
  "pausable_clock",
  "pixels",

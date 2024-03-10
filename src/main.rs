@@ -2,7 +2,7 @@ extern crate core;
 
 #[cfg(target_arch = "wasm32")]
 use {
-    leptos::js_sys::{Array, ArrayBuffer, Uint8Array},
+    js_sys::{Array, ArrayBuffer, Uint8Array},
     wasm_bindgen::{JsCast, JsValue},
     wasm_bindgen::closure::Closure,
     wasm_bindgen_futures::JsFuture,
@@ -130,7 +130,7 @@ impl SaveFile {
 
 #[cfg(target_arch = "wasm32")]
 async fn start_wasm(file: web_sys::File) {
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
 
     let window = setup_window(file.name()).build(&event_loop).unwrap();
 
@@ -139,7 +139,7 @@ async fn start_wasm(file: web_sys::File) {
         .and_then(|doc| doc.get_element_by_id("ironboy-canvas"))
         .and_then(|container| {
             use winit::platform::web::WindowExtWebSys;
-            let canvas = &web_sys::Element::from(window.canvas());
+            let canvas = &web_sys::Element::from(window.canvas().unwrap());
             canvas.set_attribute("style", "width: 100%; height: 100%").unwrap();
             canvas.set_attribute("tabindex", "1").unwrap();
             canvas.set_attribute("id", "ironboy-screen").unwrap();
@@ -147,7 +147,7 @@ async fn start_wasm(file: web_sys::File) {
             container.append_child(canvas).ok()
         });
 
-    window.set_inner_size(LogicalSize::new(240, 218));
+    window.set_min_inner_size(Some(LogicalSize::new(240, 218)));
 
     let pixels = setup_pixels(&window).await;
     file_callback(pixels, event_loop, Some(file)).await;
@@ -485,40 +485,40 @@ fn check_buttons(rom_path: String, format: SaveFile, gameboy: &mut Gameboy, mute
             continue;
         }
         let code = match *key {
-            "a" => Z,
-            "b" => C,
-            "select" => Back,
-            "start" => Return,
-            "up" => Up,
-            "left" => Left,
-            "right" => Right,
-            "down" => Down,
-            "speaker" => M,
-            "power" => R,
-            "pause" => P,
-            "sleep" => F,
-            "save" => S,
+            "a" => KeyZ,
+            "b" => KeyC,
+            "select" => Backspace,
+            "start" => Enter,
+            "up" => ArrowUp,
+            "left" => ArrowLeft,
+            "right" => ArrowRight,
+            "down" => ArrowDown,
+            "speaker" => KeyM,
+            "power" => KeyR,
+            "pause" => KeyP,
+            "sleep" => KeyF,
+            "save" => KeyS,
             _ => unreachable!()
         };
         if ACTION.contains(&code) && !gameboy.mmu.joypad.held_action.contains(&code) {
             gameboy.mmu.joypad.held_action.push(code);
         } else if DIRECTION.contains(&code) && !gameboy.mmu.joypad.held_direction.contains(&code) {
             gameboy.mmu.joypad.held_direction.push(code);
-        } else if code == M {
+        } else if code == KeyM {
             muted.store(!muted.load(Relaxed), Relaxed);
             value.store(false, Relaxed);
-        } else if code == R {
+        } else if code == KeyR {
             gameboy.reset();
             value.store(false, Relaxed);
             break;
-        } else if code == P {
+        } else if code == KeyP {
             *paused = !*paused;
             value.store(false, Relaxed);
             break;
-        } else if code == F {
+        } else if code == KeyF {
             sleep.store(!sleep.load(Relaxed), Relaxed);
             value.store(false, Relaxed);
-        } else if code == S {
+        } else if code == KeyS {
             save_state(rom_path.clone(), gameboy, format);
             value.store(false, Relaxed);
         }
